@@ -1,0 +1,5 @@
+# 금지어 목록은 공개하지 않는다 — 목록 자체가 보호 대상 이름들이다
+denylist.local.txt
+
+__pycache__/
+*.pyc
