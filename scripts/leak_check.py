@@ -110,17 +110,20 @@ def main():
                     found += 1
 
     # git 이력 — 지운 파일도 이력에는 남는다
-    if os.path.isdir(os.path.join(ROOT, ".git")):
-        for what, cmd in [("커밋메시지", ["log", "--all", "--format=%h %s"]),
+    # 🔴 검사 대상마다 그 저장소의 이력을 본다. 스크립트가 있는 곳이 아니라.
+    #    (처음엔 ROOT 고정이라, 다른 저장소를 검사해도 자기 이력만 보고 있었다)
+    for target in targets:
+        if not os.path.isdir(os.path.join(target, ".git")):
+            print(f"ℹ  {os.path.basename(target) or target}: git 저장소가 아니다. 이력 검사 건너뜀.")
+            continue
+        for what, cmd in [("커밋메시지", ["log", "--all", "--format=%h %s%n%b"]),
                           ("이력내파일", ["log", "--all", "--name-only", "--format="])]:
-            r = subprocess.run(["git", "-C", ROOT, "-c", "core.quotepath=false", *cmd],
+            r = subprocess.run(["git", "-C", target, "-c", "core.quotepath=false", *cmd],
                                capture_output=True, text=True, encoding="utf-8", errors="replace")
             for line in set(filter(None, (r.stdout or "").splitlines())):
                 for t, _ in hits_in(line, terms):
-                    print(f"❌ git {what}  {line.strip()}  ← '{t}'")
+                    print(f"❌ git {what} [{os.path.basename(target)}]  {line.strip()}  ← '{t}'")
                     found += 1
-    else:
-        print("ℹ  git 저장소가 아직 아니다. 커밋 이력 검사는 건너뛴다.")
 
     print()
     if found:
